@@ -7,8 +7,11 @@ SQLite via Prisma, self-hosted.
 
 ```bash
 npm install
-npx prisma migrate dev   # creates prisma/dev.db and applies the schema
-npm run db:seed          # categories, sample achievements, one admin user
+ # creates prisma/dev.db and applies the schema 
+npx prisma migrate dev    # dev
+npx prisma migrate deploy # production
+# categories, sample achievements, one admin user
+npm run db:seed           
 npm run dev
 ```
 
@@ -16,6 +19,14 @@ Open http://localhost:3000. Seeded admin login: **gm / pivo123** — change the
 password after first login (there is no in-app password-change flow yet;
 register a new admin the normal way, or update the `passwordHash` column
 directly, see below).
+
+`migrate dev` and `db:seed` are one-time initial setup (both are safe to
+re-run — `migrate dev` just applies any not-yet-applied migrations, and
+`db:seed` upserts, so it won't duplicate data or touch an existing admin's
+password — but you only need them once). On the real server, use
+`npx prisma migrate deploy` instead of `migrate dev` (non-interactive,
+production-safe); re-run it again in the future only when a new migration
+ships.
 
 ## Adding another admin
 
@@ -59,7 +70,7 @@ Remove it after the event with `Unregister-ScheduledTask -TaskName "ChlivekAchie
 **Linux/macOS (cron)**, add to crontab (`crontab -e`) for every 5 minutes:
 
 ```
-*/5 * * * * cd /path/to/chlivek-achievements && npm run backup >> /var/log/ccm-backup.log 2>&1
+*/5 * * * * cd /var/www/chlivek.fredrik.cz && npm run backup >> /var/log/ccm-backup.log 2>&1
 ```
 
 ## Notes
