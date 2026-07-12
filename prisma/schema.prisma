@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("player") // "player" | "admin"
+  createdAt    DateTime @default(now())
+
+  sessions            Session[]
+  submissions         Submission[] @relation("SubmissionUser")
+  reviewedSubmissions Submission[] @relation("SubmissionReviewer")
+  secretDraws         SecretDraw[]
+}
+
+model Session {
+  token     String   @id
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  achievements Achievement[]
+}
+
+// Normal achievements belong to a Category. Secret achievements (isSecret =
+// true) are the hidden draw pool: they have no category and are never shown
+// in the regular achievement list, only revealed via SecretDraw.
+model Achievement {
+  id               String   @id @default(cuid())
+  title            String
+  description      String
+  points           Int
+  categoryId       String?
+  isSecret         Boolean  @default(false)
+  requiresApproval Boolean  @default(true)
+  isActive         Boolean  @default(true)
+  iconPath         String?
+  createdAt        DateTime @default(now())
+
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  submissions Submission[]
+  secretDraws SecretDraw[]
+
+  @@index([categoryId])
+  @@index([isSecret])
+}
+
+// A "žádost o schválení" — one attempt (by a player, by the secret-draw
+// system, or manually granted by an admin) to be credited an achievement.
+// Points only count toward a user's total once status = 'approved'.
+model Submission {
+  id            String    @id @default(cuid())
+  userId        String
+  achievementId String
+  status        String    @default("pending") // pending | approved | rejected
+  note          String?
+  photoPath     String?
+  rejectReason  String?
+  source        String    @default("player") // player | secret_draw | admin_manual
+  submittedAt   DateTime  @default(now())
+  reviewedAt    DateTime?
+  reviewedById  String?
+
+  user        User        @relation("SubmissionUser", fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  reviewedBy  User?       @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
+  secretDraw  SecretDraw?
+
+  @@index([userId])
+  @@index([achievementId])
+  @@index([status])
+}
+
+// Evidence of which 100-point milestone a player has already drawn a secret
+// achievement for, so they can never draw twice on the same threshold.
+model SecretDraw {
+  id            String   @id @default(cuid())
+  userId        String
+  threshold     Int
+  achievementId String
+  submissionId  String   @unique
+  drawnAt       DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+  submission  Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, threshold])
+}
+
+// Singleton row (id is always 1).
+model EventSettings {
+  id                 Int      @id @default(1)
+  eventName          String
+  leaderboardVisible Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+}

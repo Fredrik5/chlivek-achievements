@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npx prisma *)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(node -e \"const pkg=require\\('better-sqlite3/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(npm run *)",
+      "Bash(mkdir -p e:/Work/chlivek/achievements/chlivek-achievements/src/app/api/achievements/\\\\[id\\\\]/submit \\\\ *)",
+      "Bash(mkdir -p e:/Work/chlivek/achievements/chlivek-achievements/src/app/api/admin/event \\\\ *)",
+      "Bash(mkdir -p \"e:/Work/chlivek/achievements/chlivek-achievements/src/app/api/admin/players/[id]\")",
+      "Bash(npx tsc *)",
+      "Bash(npx eslint *)",
+      "Bash(mkdir -p \"e:/Work/chlivek/achievements/chlivek-achievements/src/app/\\(app\\)/dashboard\" \\\\ *)",
+      "Bash(cd /tmp)",
+      "Bash(curl -s -b player.jar \"http://localhost:3000/api/leaderboard?filter=all\")",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\('visible:',j.visible,'players:',j.players?.length\\)}\\)\")",
+      "Bash(curl -s -X PATCH -H \"Content-Type: application/json\" -d '{\"leaderboardVisible\":false}' -b admin.jar http://localhost:3000/api/admin/event)",
+      "Bash(curl -s -b admin.jar \"http://localhost:3000/api/leaderboard?filter=all\")",
+      "Bash(curl -s -X PATCH -H \"Content-Type: application/json\" -d '{\"leaderboardVisible\":true}' -b admin.jar http://localhost:3000/api/admin/event)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__click",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__take_screenshot",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__navigate_page",
+      "Bash(mkdir -p \"e:/Work/chlivek/achievements/chlivek-achievements/src/app/api/admin/achievements/[id]/icon\")",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__take_snapshot",
+      "Bash(node -e ' *)",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__upload_file",
+      "Bash(rm -f player3.jar)",
+      "Bash(curl -s -c player3.jar -H \"Content-Type: application/json\" -d '{\"username\":\"IconTest\",\"password\":\"test1234\"}' http://localhost:3000/api/auth/register)",
+      "Bash(curl -s -b player3.jar http://localhost:3000/api/achievements)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);console.log\\(j.achievements[0].title, j.achievements[0].iconPath\\)}\\)\")",
+      "mcp__plugin_chrome-devtools-mcp_chrome-devtools__evaluate_script"
+    ],
+    "additionalDirectories": [
+      "e:\\Work\\chlivek\\achievements\\chlivek-achievements\\src\\app\\api\\achievements\\[id]",
+      "e:\\Work\\chlivek\\achievements\\chlivek-achievements\\src\\app\\api\\admin\\categories",
+      "e:\\Work\\chlivek\\achievements\\chlivek-achievements\\src\\app\\api\\admin\\players\\[id]",
+      "e:\\Work\\chlivek\\achievements\\chlivek-achievements\\src\\app\\(app)\\achievement",
+      "e:\\Work\\chlivek\\achievements\\chlivek-achievements\\src\\app\\api\\admin\\achievements\\[id]"
+    ]
+  }
+}

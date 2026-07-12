@@ -1,24 +1,60 @@
-# Nestjs specific
-/dist
-/node_modules
-/build
-/tmp
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Logs
-logs
-*.log
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-# dotenv environment variable files
-.env
-.env.development
-.env.test
-.env.production
+# env files (can opt-in for committing if needed)
+.env*
 
-# temp directory
-.temp
-.tmp
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# database
+/prisma/dev.db
+/prisma/dev.db-journal
+/prisma/dev.db-wal
+/prisma/dev.db-shm
+/prisma/backups/*
+!/prisma/backups/.gitkeep
+
+# generated prisma client
+/src/generated/prisma
+
+# runtime-uploaded proof photos
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# admin-uploaded achievement icons
+/public/icons/*
+!/public/icons/.gitkeep

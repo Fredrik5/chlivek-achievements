@@ -1,0 +1,168 @@
+/* Manrope from Google Fonts — requires network access on first load.
+   If self-hosting somewhere without internet, swap for a bundled font. */
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+/* ==========================================================================
+   ČESKÉ CHLEVY A MÁRNICE — COLOR TOKENS
+   Dark fantasy guild palette: bordeaux, gold/bronze, near-black surfaces.
+   ========================================================================== */
+
+:root {
+  /* ---- Base palette (raw values) ---- */
+  --c-bordeaux-900: #3a0000;
+  --c-bordeaux-800: #4a0000;
+  --c-bordeaux-700: #5A0000; /* brand primary, as specified */
+  --c-bordeaux-600: #7a1010;
+  --c-bordeaux-500: #932020;
+
+  --c-gold-900: #7a5b1c;
+  --c-gold-800: #A67A25;
+  --c-gold-700: #C8942B; /* brand accent, as specified */
+  --c-gold-600: #DBAE52;
+  --c-gold-500: #E8C784;
+  --c-gold-glow: #F4D896;
+
+  --c-brown-950: #120a07; /* app background, near-black */
+  --c-brown-900: #1c110c;
+  --c-brown-800: #2B1810; /* card background, as specified */
+  --c-brown-700: #3a2318;
+  --c-brown-600: #4d3125;
+
+  --c-white: #FFFFFF;
+  --c-parchment: #F3E9DC; /* warm off-white for body text on dark */
+  --c-bone: #C9BBAE; /* muted secondary text */
+  --c-ash: #8a7d73; /* disabled / tertiary text */
+
+  --c-gray-600: #6b6b6b; /* locked / undone state */
+  --c-gray-500: #8a8a8a;
+  --c-gray-400: #a3a3a3;
+
+  --c-amber-600: #B4740E; /* pending state, darker for borders */
+  --c-amber-500: #E8A33D; /* pending state, primary */
+  --c-amber-300: #F4C784;
+
+  --c-emerald-600: #2f6b4f; /* used sparingly: approved secondary confirmation tint */
+
+  /* ---- Semantic aliases ---- */
+  --surface-app-bg: var(--c-brown-950);
+  --surface-app-bg-gradient: radial-gradient(120% 100% at 50% -10%, var(--c-bordeaux-800) 0%, var(--c-brown-950) 55%);
+  --surface-card: var(--c-brown-800);
+  --surface-card-hover: var(--c-brown-700);
+  --surface-card-sunken: var(--c-brown-900);
+  --surface-overlay: rgba(18, 10, 7, 0.86);
+
+  --surface-primary: var(--c-bordeaux-700);
+  --surface-primary-hover: var(--c-bordeaux-600);
+  --surface-primary-active: var(--c-bordeaux-900);
+
+  --accent-gold: var(--c-gold-700);
+  --accent-gold-hover: var(--c-gold-600);
+  --accent-gold-active: var(--c-gold-800);
+  --accent-gold-glow: var(--c-gold-glow);
+
+  --text-heading: var(--c-white);
+  --text-body: var(--c-parchment);
+  --text-muted: var(--c-bone);
+  --text-disabled: var(--c-ash);
+  --text-on-gold: var(--c-brown-950);
+  --text-on-primary: var(--c-white);
+
+  --border-subtle: rgba(200, 148, 43, 0.18);
+  --border-default: rgba(200, 148, 43, 0.35);
+  --border-strong: var(--c-gold-700);
+  --border-hairline-dark: rgba(0, 0, 0, 0.45);
+
+  /* Achievement status system */
+  --status-locked-bg: rgba(255, 255, 255, 0.04);
+  --status-locked-fg: var(--c-gray-500);
+  --status-locked-border: rgba(255, 255, 255, 0.08);
+  --status-locked-icon-filter: grayscale(1) brightness(0.6);
+
+  --status-pending-bg: rgba(232, 163, 61, 0.12);
+  --status-pending-fg: var(--c-amber-500);
+  --status-pending-border: rgba(232, 163, 61, 0.45);
+  --status-pending-glow: 0 0 0 1px rgba(232, 163, 61, 0.4), 0 0 16px rgba(232, 163, 61, 0.25);
+
+  --status-approved-bg: rgba(200, 148, 43, 0.14);
+  --status-approved-fg: var(--c-gold-600);
+  --status-approved-border: var(--c-gold-700);
+  --status-approved-glow: 0 0 0 1px rgba(200, 148, 43, 0.55), 0 0 20px rgba(200, 148, 43, 0.35);
+
+  /* Shadows */
+  --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 20px rgba(0, 0, 0, 0.45);
+  --shadow-raised: 0 2px 0 rgba(0,0,0,0.3), 0 10px 24px rgba(0, 0, 0, 0.5);
+  --shadow-inset-sunken: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+   TYPOGRAPHY — display gothic (Warcraft) for short headings/numbers only;
+   clean sans (Manrope) for all body copy — pub-readable at a glance.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Warcraft";
+  src: url("/fonts/Warcraft-Yj2j.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-display: "Warcraft", "Cinzel", serif;
+  --font-body: "Manrope", -apple-system, "Segoe UI", sans-serif;
+
+  --text-display-xl: 700 44px/1.05 var(--font-display);
+  --text-display-lg: 400 32px/1.1 var(--font-display);
+  --text-display-md: 400 24px/1.15 var(--font-display);
+  --text-display-badge: 400 22px/1 var(--font-display);
+  --text-display-badge-sm: 400 16px/1 var(--font-display);
+
+  --text-heading-lg: 700 22px/1.25 var(--font-body);
+  --text-heading-md: 700 18px/1.3 var(--font-body);
+  --text-heading-sm: 600 15px/1.35 var(--font-body);
+
+  --text-body-lg: 500 17px/1.5 var(--font-body);
+  --text-body-md: 500 15px/1.5 var(--font-body);
+  --text-body-sm: 500 13px/1.45 var(--font-body);
+
+  --text-label: 700 12px/1.2 var(--font-body);
+  --text-label-caps: 700 11px/1.2 var(--font-body);
+  --text-caption: 500 12px/1.4 var(--font-body);
+
+  --tracking-caps: 0.08em;
+}
+
+/* ==========================================================================
+   SPACING, RADIUS, LAYOUT — mobile-first, large tap targets.
+   ========================================================================== */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --tap-target-min: 48px;
+
+  --container-mobile: 420px;
+
+  --border-width-hairline: 1px;
+  --border-width-thick: 2px;
+
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 420ms;
+  --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
