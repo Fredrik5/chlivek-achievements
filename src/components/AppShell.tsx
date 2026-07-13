@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppHeader, TabBar } from "./ui";
 import { buildTabItems, TAB_ROUTES } from "@/lib/nav";
 import { useUser } from "@/lib/user-context";
+import { apiFetch } from "@/lib/apiClient";
 
 interface AppShellProps {
   title: string;
@@ -22,6 +23,12 @@ export function AppShell({ title, activeTab, maxWidth = 480, children }: AppShel
     if (key === activeTab) return;
     const route = TAB_ROUTES[key];
     if (route) router.push(route);
+  }
+
+  async function handleLogout() {
+    await apiFetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
   }
 
   return (
@@ -44,7 +51,7 @@ export function AppShell({ title, activeTab, maxWidth = 480, children }: AppShel
           minHeight: "100dvh",
         }}
       >
-        <AppHeader title={title} />
+        <AppHeader title={title} onLogout={handleLogout} />
         <div
           style={{
             flex: 1,

@@ -1,8 +1,11 @@
+import { IconButton } from "./IconButton";
+
 interface AppHeaderProps {
   title: string;
+  onLogout?: () => void;
 }
 
-export function AppHeader({ title }: AppHeaderProps) {
+export function AppHeader({ title, onLogout }: AppHeaderProps) {
   return (
     <div
       style={{
@@ -21,6 +24,11 @@ export function AppHeader({ title }: AppHeaderProps) {
       <span style={{ font: "var(--text-display-md)", color: "var(--text-heading)" }}>
         {title}
       </span>
+      {onLogout && (
+        <IconButton label="Odhlásit se" onClick={onLogout} style={{ marginLeft: "auto" }}>
+          ⏻
+        </IconButton>
+      )}
     </div>
   );
 }
