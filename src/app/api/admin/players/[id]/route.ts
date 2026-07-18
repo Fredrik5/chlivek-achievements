@@ -36,10 +36,17 @@ export async function GET(
         when: s.reviewedAt,
       }));
 
+    const activeSubmissions = await prisma.submission.findMany({
+      where: { userId: id, status: { in: ["pending", "approved"] } },
+      select: { achievementId: true },
+    });
+    const activeAchievementIds = [...new Set(activeSubmissions.map((s) => s.achievementId))];
+
     return NextResponse.json({
       player: { id: player.id, name: player.username, points: await getApprovedTotal(id) },
       achievements,
       history,
+      activeAchievementIds,
     });
   } catch (err) {
     return handleApiError(err);

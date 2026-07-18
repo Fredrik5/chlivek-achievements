@@ -15,6 +15,7 @@ interface PlayerDetail {
   player: { id: string; name: string; points: number };
   achievements: { submissionId: string; title: string; points: number }[];
   history: { label: string; when: string }[];
+  activeAchievementIds: string[];
 }
 
 interface AchievementOption {
@@ -32,6 +33,8 @@ export function PlayersTab() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [options, setOptions] = useState<AchievementOption[]>([]);
   const [pickedId, setPickedId] = useState("");
+  const [addError, setAddError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   function loadPlayers() {
     const params = new URLSearchParams();
@@ -55,21 +58,24 @@ export function PlayersTab() {
 
   async function openAddModal() {
     setPickedId("");
+    setAddError("");
     setAddModalOpen(true);
     try {
       const [normal, secret] = await Promise.all([
         apiFetch<{ achievements: AchievementOption[] }>("/api/admin/achievements?secret=false"),
         apiFetch<{ achievements: AchievementOption[] }>("/api/admin/achievements?secret=true"),
       ]);
-      setOptions([...normal.achievements, ...secret.achievements]);
+      const active = new Set(detail?.activeAchievementIds ?? []);
+      setOptions([...normal.achievements, ...secret.achievements].filter((a) => !active.has(a.id)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Chyba načítání.");
+      setAddError(err instanceof Error ? err.message : "Chyba načítání.");
     }
   }
 
   async function confirmAdd() {
-    if (!selectedId || !pickedId) return;
-    setError("");
+    if (!selectedId || !pickedId || submitting) return;
+    setAddError("");
+    setSubmitting(true);
     try {
       await apiFetch(`/api/admin/players/${selectedId}/achievements`, {
         method: "POST",
@@ -79,7 +85,9 @@ export function PlayersTab() {
       loadDetail(selectedId);
       loadPlayers();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Něco se pokazilo.");
+      setAddError(err instanceof Error ? err.message : "Něco se pokazilo.");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -286,12 +294,24 @@ export function PlayersTab() {
               ))}
             </select>
           </ModalField>
+          {options.length === 0 && !addError && (
+            <span style={{ font: "var(--text-body-sm)", color: "var(--text-disabled)" }}>
+              Hráč už má všechny achievementy splněné nebo čekající na schválení.
+            </span>
+          )}
+          {addError && <span style={{ color: "var(--status-pending-fg)" }}>{addError}</span>}
           <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-2)" }}>
             <Button variant="ghost" size="md" fullWidth onClick={() => setAddModalOpen(false)}>
               Zrušit
             </Button>
-            <Button variant="gold" size="md" fullWidth disabled={!pickedId} onClick={confirmAdd}>
-              Uložit
+            <Button
+              variant="gold"
+              size="md"
+              fullWidth
+              disabled={!pickedId || submitting}
+              onClick={confirmAdd}
+            >
+              {submitting ? "Ukládám…" : "Uložit"}
             </Button>
           </div>
         </Modal>

@@ -13,9 +13,10 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
+  let photoInfo: { name: string; type: string; size: number } | null = null;
   try {
     const user = await requireUser();
-    const { id } = await params;
 
     const achievement = await prisma.achievement.findUnique({ where: { id } });
     if (!achievement || achievement.isSecret || !achievement.isActive) {
@@ -39,6 +40,7 @@ export async function POST(
     const photo = form.get("photo");
     let photoPath: string | null = null;
     if (photo instanceof File && photo.size > 0) {
+      photoInfo = { name: photo.name, type: photo.type, size: photo.size };
       if (!photo.type.startsWith("image/")) {
         return NextResponse.json({ error: "Příloha musí být obrázek." }, { status: 400 });
       }
@@ -69,6 +71,7 @@ export async function POST(
 
     return NextResponse.json({ submission: { id: submission.id, status: submission.status } });
   } catch (err) {
+    console.error(`[achievements/${id}/submit] failed`, { photoInfo }, err);
     return handleApiError(err);
   }
 }

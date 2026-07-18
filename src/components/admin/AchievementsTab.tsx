@@ -39,6 +39,29 @@ interface AchievementFormState {
 }
 
 const NEW_CATEGORY_VALUE = "__new__";
+const ICON_MAX_DIMENSION = 512;
+const ICON_JPEG_QUALITY = 0.85;
+
+// Phone camera photos routinely exceed the 2 MB server limit; downscale
+// client-side so admins don't hit a silent rejection on upload.
+async function resizeIconFile(file: File): Promise<File> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, ICON_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return file;
+  ctx.drawImage(bitmap, 0, 0, width, height);
+
+  const type = file.type === "image/jpeg" ? "image/jpeg" : "image/png";
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, ICON_JPEG_QUALITY));
+  if (!blob) return file;
+  return new File([blob], file.name, { type });
+}
 
 const EMPTY_FORM: AchievementFormState = {
   title: "",
@@ -99,6 +122,7 @@ export function AchievementsTab() {
     setIconFile(null);
     setIconPreview("");
     setIconError("");
+    setError("");
   }
 
   function openEdit(a: AchievementRow) {
@@ -116,15 +140,18 @@ export function AchievementsTab() {
     setIconFile(null);
     setIconPreview("");
     setIconError("");
+    setError("");
   }
 
-  function onIconFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onIconFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setIconFile(file);
+    setIconError("");
+    const resized = await resizeIconFile(file).catch(() => file);
+    setIconFile(resized);
     const reader = new FileReader();
     reader.onload = () => setIconPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(resized);
   }
 
   async function removeIcon() {
@@ -334,6 +361,7 @@ export function AchievementsTab() {
             {filteredAchievements.map((a) => (
               <div
                 key={a.id}
+                onClick={() => openEdit(a)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -344,6 +372,7 @@ export function AchievementsTab() {
                   background: "var(--surface-card)",
                   border: "1px solid var(--border-subtle)",
                   opacity: a.isActive ? 1 : 0.55,
+                  cursor: "pointer",
                 }}
               >
                 <div
@@ -416,10 +445,15 @@ export function AchievementsTab() {
                   </span>
                   <span style={{ font: "var(--text-caption)", color: "var(--text-disabled)" }}>splnilo</span>
                 </div>
-                <Toggle size="sm" checked={a.isActive} onChange={() => toggleActive(a)} label="Aktivní/skryto" />
-                <Button variant="ghost" size="sm" onClick={() => openEdit(a)}>
-                  Upravit
-                </Button>
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}
+                >
+                  <Toggle size="sm" checked={a.isActive} onChange={() => toggleActive(a)} label="Aktivní/skryto" />
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(a)}>
+                    Upravit
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -550,6 +584,7 @@ export function AchievementsTab() {
             {secretAchievements.map((s) => (
               <div
                 key={s.id}
+                onClick={() => openEdit(s)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -559,6 +594,7 @@ export function AchievementsTab() {
                   borderRadius: "var(--radius-lg)",
                   background: "linear-gradient(160deg, rgba(107,38,130,0.14), var(--surface-card))",
                   border: "1px solid rgba(147,72,178,0.35)",
+                  cursor: "pointer",
                 }}
               >
                 <div
@@ -617,12 +653,17 @@ export function AchievementsTab() {
                   </span>
                 )}
                 <Badge points={s.points} size="sm" state="approved" />
-                <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>
-                  Upravit
-                </Button>
-                <Button variant="danger" size="sm" onClick={() => deleteAchievement(s.id)}>
-                  Smazat
-                </Button>
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}
+                >
+                  <Button variant="ghost" size="sm" onClick={() => openEdit(s)}>
+                    Upravit
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={() => deleteAchievement(s.id)}>
+                    Smazat
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -767,6 +808,8 @@ export function AchievementsTab() {
               Obrázek do 2 MB. Bez vlastní ikony se zobrazuje logo watermark.
             </span>
           </ModalField>
+
+          {error && <span style={{ color: "var(--status-pending-fg)" }}>{error}</span>}
 
           <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-2)" }}>
             <Button variant="ghost" size="md" fullWidth onClick={() => setForm(null)}>
