@@ -110,6 +110,22 @@ html {
   color: var(--accent-gold-hover);
 }
 
+.cca-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  opacity: 0.85;
+  flex-shrink: 0;
+  animation: cca-spinner-rotate 0.7s linear infinite;
+}
+@keyframes cca-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes cca-spin {
   0% {
     transform: rotate(0deg) scale(1);

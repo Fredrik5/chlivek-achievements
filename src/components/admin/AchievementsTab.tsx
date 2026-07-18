@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Badge } from "@/components/ui";
 import { apiFetch } from "@/lib/apiClient";
+import { resizeImageFile } from "@/lib/imageResize";
 import { Modal, ModalField } from "./Modal";
 import { Toggle } from "./Toggle";
 
@@ -41,27 +42,6 @@ interface AchievementFormState {
 const NEW_CATEGORY_VALUE = "__new__";
 const ICON_MAX_DIMENSION = 512;
 const ICON_JPEG_QUALITY = 0.85;
-
-// Phone camera photos routinely exceed the 2 MB server limit; downscale
-// client-side so admins don't hit a silent rejection on upload.
-async function resizeIconFile(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, ICON_MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
-  const width = Math.round(bitmap.width * scale);
-  const height = Math.round(bitmap.height * scale);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return file;
-  ctx.drawImage(bitmap, 0, 0, width, height);
-
-  const type = file.type === "image/jpeg" ? "image/jpeg" : "image/png";
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, ICON_JPEG_QUALITY));
-  if (!blob) return file;
-  return new File([blob], file.name, { type });
-}
 
 const EMPTY_FORM: AchievementFormState = {
   title: "",
@@ -147,7 +127,9 @@ export function AchievementsTab() {
     const file = e.target.files?.[0];
     if (!file) return;
     setIconError("");
-    const resized = await resizeIconFile(file).catch(() => file);
+    const resized = await resizeImageFile(file, { maxDimension: ICON_MAX_DIMENSION, quality: ICON_JPEG_QUALITY }).catch(
+      () => file,
+    );
     setIconFile(resized);
     const reader = new FileReader();
     reader.onload = () => setIconPreview(reader.result as string);

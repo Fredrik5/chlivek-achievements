@@ -4,6 +4,11 @@ import { useEffect, useState, use as usePromise } from "react";
 import { useRouter } from "next/navigation";
 import { Badge, Button, IconButton, StatusPill } from "@/components/ui";
 import { apiFetch } from "@/lib/apiClient";
+import { resizeImageFile } from "@/lib/imageResize";
+import { withMinDelay } from "@/lib/withMinDelay";
+
+const PHOTO_MAX_DIMENSION = 1600;
+const PHOTO_JPEG_QUALITY = 0.82;
 
 type Status = "undone" | "pending" | "approved";
 
@@ -33,6 +38,8 @@ export default function AchievementDetailPage({
   const [note, setNote] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>("");
+  const [photoProcessing, setPhotoProcessing] = useState(false);
+  const [photoError, setPhotoError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   function load() {
@@ -43,18 +50,32 @@ export default function AchievementDetailPage({
 
   useEffect(load, [id]);
 
-  function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-    setPhotoFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setPhotoPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    setPhotoError("");
+    setPhotoProcessing(true);
+    try {
+      const resized = await resizeImageFile(file, {
+        maxDimension: PHOTO_MAX_DIMENSION,
+        quality: PHOTO_JPEG_QUALITY,
+      });
+      setPhotoFile(resized);
+      const reader = new FileReader();
+      reader.onload = () => setPhotoPreview(reader.result as string);
+      reader.readAsDataURL(resized);
+    } catch {
+      setPhotoError("Tuhle fotku se nepodařilo zpracovat (nepodporovaný formát). Zkus prosím jiný soubor.");
+    } finally {
+      setPhotoProcessing(false);
+    }
   }
 
   function clearPhoto() {
     setPhotoFile(null);
     setPhotoPreview("");
+    setPhotoError("");
   }
 
   async function submit() {
@@ -64,7 +85,10 @@ export default function AchievementDetailPage({
       const form = new FormData();
       if (note.trim()) form.set("note", note.trim());
       if (photoFile) form.set("photo", photoFile);
-      await apiFetch(`/api/achievements/${id}/submit`, { method: "POST", body: form });
+      await withMinDelay(
+        apiFetch(`/api/achievements/${id}/submit`, { method: "POST", body: form }),
+        photoFile ? 1000 : 600,
+      );
       setNote("");
       clearPhoto();
       load();
@@ -80,7 +104,7 @@ export default function AchievementDetailPage({
     setSubmitting(true);
     setError("");
     try {
-      await apiFetch(`/api/submissions/${data.submission.id}/cancel`, { method: "POST" });
+      await withMinDelay(apiFetch(`/api/submissions/${data.submission.id}/cancel`, { method: "POST" }));
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Něco se pokazilo.");
@@ -95,7 +119,7 @@ export default function AchievementDetailPage({
     setSubmitting(true);
     setError("");
     try {
-      await apiFetch(`/api/submissions/${data.submission.id}/cancel`, { method: "POST" });
+      await withMinDelay(apiFetch(`/api/submissions/${data.submission.id}/cancel`, { method: "POST" }));
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Něco se pokazilo.");
@@ -191,7 +215,7 @@ export default function AchievementDetailPage({
 
                 <span
                   style={{
-                    font: "400 32px/1.15 var(--font-display)",
+                    font: "700 26px/1.25 var(--font-body)",
                     color: "var(--text-heading)",
                     textAlign: "center",
                   }}
@@ -310,14 +334,35 @@ export default function AchievementDetailPage({
                           padding: "var(--space-4)",
                           color: "var(--text-muted)",
                           font: "var(--text-body-sm)",
-                          cursor: "pointer",
+                          cursor: photoProcessing ? "default" : "pointer",
                           background: "var(--surface-card-sunken)",
                         }}
                       >
-                        <span style={{ fontSize: 18 }}>📷</span>
-                        <span>Přidat fotku jako důkaz (volitelné)</span>
-                        <input type="file" accept="image/*" onChange={onPhotoChange} style={{ display: "none" }} />
+                        {photoProcessing ? (
+                          <>
+                            <span className="cca-spinner" aria-hidden="true" />
+                            <span>Zpracovávám fotku…</span>
+                          </>
+                        ) : (
+                          <>
+                            <span style={{ fontSize: 18 }}>📷</span>
+                            <span>Přidat fotku jako důkaz (volitelné)</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={onPhotoChange}
+                          disabled={photoProcessing}
+                          style={{ display: "none" }}
+                        />
                       </label>
+                    )}
+
+                    {photoError && (
+                      <span style={{ font: "var(--text-body-sm)", color: "var(--status-pending-fg)" }}>
+                        {photoError}
+                      </span>
                     )}
 
                     <textarea
@@ -329,8 +374,21 @@ export default function AchievementDetailPage({
                       style={{ resize: "vertical", padding: "10px 12px", fontFamily: "var(--font-body)" }}
                     />
 
-                    <Button variant="gold" size="lg" fullWidth disabled={submitting} onClick={submit}>
-                      {data.achievement.requiresApproval ? "Odeslat ke schválení" : "Označit jako splněné"}
+                    <Button
+                      variant="gold"
+                      size="lg"
+                      fullWidth
+                      disabled={photoProcessing}
+                      loading={submitting}
+                      onClick={submit}
+                    >
+                      {submitting
+                        ? photoFile
+                          ? "Nahrávám fotku…"
+                          : "Odesílám…"
+                        : data.achievement.requiresApproval
+                          ? "Odeslat ke schválení"
+                          : "Označit jako splněné"}
                     </Button>
                   </div>
                 )}
@@ -395,7 +453,7 @@ export default function AchievementDetailPage({
                         />
                       )}
                     </div>
-                    <Button variant="ghost" size="md" fullWidth disabled={submitting} onClick={cancelRequest}>
+                    <Button variant="ghost" size="md" fullWidth loading={submitting} onClick={cancelRequest}>
                       Zrušit žádost
                     </Button>
                   </>
@@ -473,7 +531,7 @@ export default function AchievementDetailPage({
                 )}
 
                 {data.status === "approved" && (
-                  <Button variant="ghost" size="md" fullWidth disabled={submitting} onClick={removeCompleted}>
+                  <Button variant="ghost" size="md" fullWidth loading={submitting} onClick={removeCompleted}>
                     Zrušit splnění
                   </Button>
                 )}

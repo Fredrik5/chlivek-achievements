@@ -9,6 +9,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   size?: ButtonSize;
   fullWidth?: boolean;
+  loading?: boolean;
 }
 
 const SIZE_STYLES: Record<ButtonSize, CSSProperties> = {
@@ -42,22 +43,24 @@ export function Button({
   size = "md",
   fullWidth = false,
   disabled,
+  loading = false,
   style,
   className,
   children,
   ...rest
 }: ButtonProps) {
+  const isDisabled = disabled || loading;
   return (
     <button
-      disabled={disabled}
+      disabled={isDisabled}
       className={["cca-button", className].filter(Boolean).join(" ")}
       style={{
         ...SIZE_STYLES[size],
         ...VARIANT_STYLES[variant],
         width: fullWidth ? "100%" : undefined,
         borderRadius: "var(--radius-md)",
-        cursor: disabled ? "default" : "pointer",
-        opacity: disabled ? 0.5 : 1,
+        cursor: isDisabled ? "default" : "pointer",
+        opacity: isDisabled ? 0.5 : 1,
         transition: "transform var(--duration-fast) var(--ease-standard)",
         display: "inline-flex",
         alignItems: "center",
@@ -67,6 +70,7 @@ export function Button({
       }}
       {...rest}
     >
+      {loading && <span className="cca-spinner" aria-hidden="true" />}
       {children}
     </button>
   );

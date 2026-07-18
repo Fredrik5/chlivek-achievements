@@ -219,7 +219,7 @@ export default function SecretPage() {
                 }
               />
             </div>
-            <span style={{ font: "400 28px/1.2 var(--font-display)", color: "var(--text-heading)" }}>
+            <span style={{ font: "700 22px/1.25 var(--font-body)", color: "var(--text-heading)" }}>
               {revealModal.achievement.title}
             </span>
             <span style={{ font: "var(--text-body-md)", color: "var(--text-body)" }}>
