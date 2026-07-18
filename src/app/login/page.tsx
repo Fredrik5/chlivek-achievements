@@ -123,7 +123,7 @@ export default function LoginPage() {
               textAlign: "center",
             }}
           >
-            České chlevy a márnice
+            CESKE CHLEVY A MARNICE
           </div>
           <div style={{ font: "var(--text-body-sm)", color: "var(--text-muted)" }}>
             Guildovní tracker achievementů

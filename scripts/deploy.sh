@@ -12,13 +12,16 @@ npm install
 echo "💾 Zalohuji databazi..."
 npm run backup
 
+echo "⏸️ Zastavuji PM2 proces (aby migrace nebezela proti zivym zapisum)..."
+pm2 stop chlivek-achievements
+
 echo "🗃️ Aplikuji migrace databaze..."
 npx prisma migrate deploy
 
 echo "🏗️ Buildim aplikaci (Next.js)..."
 npm run build
 
-echo "🔄 Restartuji PM2 proces..."
-pm2 restart chlivek-achievements
+echo "▶️ Startuji PM2 proces..."
+pm2 start chlivek-achievements
 
 echo "✅ Hotovo! Aplikace bezi v nove verzi."

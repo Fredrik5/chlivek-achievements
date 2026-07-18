@@ -53,7 +53,7 @@ export default function LeaderboardPage() {
   const me = players.find((p) => p.isMe);
 
   return (
-    <AppShell title="Žebříček" activeTab="leaderboard">
+    <AppShell title="Leaderboard" activeTab="leaderboard">
       {error && (
         <div style={{ padding: "var(--space-4)", color: "var(--status-pending-fg)" }}>{error}</div>
       )}

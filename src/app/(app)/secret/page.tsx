@@ -66,7 +66,7 @@ export default function SecretPage() {
   const nextLocked = data?.slots.find((s) => s.state === "locked");
 
   return (
-    <AppShell title="Tajné achievementy" activeTab="secret">
+    <AppShell title="Secret achievements" activeTab="secret">
       <div style={{ padding: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
         {error && <span style={{ color: "var(--status-pending-fg)" }}>{error}</span>}
 

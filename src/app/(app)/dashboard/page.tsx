@@ -53,7 +53,7 @@ export default function DashboardPage() {
     : new Map<string, AchievementItem[]>();
 
   return (
-    <AppShell title="Můj dashboard" activeTab="dashboard">
+    <AppShell title="Dashboard" activeTab="dashboard">
       <div
         style={{
           padding: "var(--space-4)",
