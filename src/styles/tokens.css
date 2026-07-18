@@ -1,6 +1,6 @@
-/* Manrope from Google Fonts — requires network access on first load.
+/* Manrope + Cinzel from Google Fonts — requires network access on first load.
    If self-hosting somewhere without internet, swap for a bundled font. */
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 /* ==========================================================================
    ČESKÉ CHLEVY A MÁRNICE — COLOR TOKENS
@@ -101,7 +101,7 @@
 
 @font-face {
   font-family: "Warcraft";
-  src: url("/fonts/Warcraft-Yj2j.ttf") format("truetype");
+  src: url("/fonts/LifeCraft_Font.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
