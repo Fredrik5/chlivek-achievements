@@ -21,6 +21,7 @@ export async function PATCH(
       categoryId?: string | null;
       requiresApproval?: boolean;
       isActive?: boolean;
+      order?: number;
     } = {};
 
     if (typeof body.title === "string" && body.title.trim()) data.title = body.title.trim();
@@ -33,7 +34,18 @@ export async function PATCH(
       }
       data.points = Math.round(points);
     }
-    if (body.categoryId !== undefined) data.categoryId = body.categoryId || null;
+    if (body.categoryId !== undefined) {
+      const newCategoryId = body.categoryId || null;
+      const current = await prisma.achievement.findUnique({ where: { id }, select: { categoryId: true } });
+      if (current && current.categoryId !== newCategoryId) {
+        const maxOrder = await prisma.achievement.aggregate({
+          _max: { order: true },
+          where: { categoryId: newCategoryId },
+        });
+        data.order = (maxOrder._max.order ?? -1) + 1;
+      }
+      data.categoryId = newCategoryId;
+    }
     if (typeof body.requiresApproval === "boolean") data.requiresApproval = body.requiresApproval;
     if (typeof body.isActive === "boolean") data.isActive = body.isActive;
 

@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const achievements = await prisma.achievement.findMany({
       where: { isSecret },
       include: { category: true, _count: { select: { submissions: { where: { status: "approved" } } } } },
-      orderBy: { createdAt: "asc" },
+      orderBy: isSecret ? { createdAt: "asc" } : [{ categoryId: "asc" }, { order: "asc" }],
     });
 
     return NextResponse.json({
@@ -54,14 +54,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Vyber kategorii." }, { status: 400 });
     }
 
+    const targetCategoryId = isSecret ? null : categoryId;
+    const maxOrder = await prisma.achievement.aggregate({
+      _max: { order: true },
+      where: { categoryId: targetCategoryId },
+    });
+    const order = (maxOrder._max.order ?? -1) + 1;
+
     const achievement = await prisma.achievement.create({
       data: {
         title,
         description,
         points: Math.round(points),
         isSecret,
-        categoryId: isSecret ? null : categoryId,
+        categoryId: targetCategoryId,
         requiresApproval,
+        order,
       },
     });
 
