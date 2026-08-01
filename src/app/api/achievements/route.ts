@@ -10,7 +10,7 @@ export async function GET() {
 
     const [achievements, mySubmissions, totalPoints] = await Promise.all([
       prisma.achievement.findMany({
-        where: { isSecret: false, isActive: true },
+        where: { isSecret: false, isDaily: false, isActive: true },
         include: { category: true },
         orderBy: [{ categoryId: "asc" }, { order: "asc" }],
       }),

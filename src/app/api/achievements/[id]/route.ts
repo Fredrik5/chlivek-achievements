@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { handleApiError } from "@/lib/api";
+import { todayDateString } from "@/lib/date";
 
 export async function GET(
   _request: Request,
@@ -25,10 +26,18 @@ export async function GET(
       }
     }
 
+    const today = todayDateString();
+    if (achievement.isDaily && achievement.dailyDate && achievement.dailyDate > today) {
+      return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
+    }
+
     const submission = await prisma.submission.findFirst({
       where: { userId: user.id, achievementId: id, status: { in: ["pending", "approved"] } },
       orderBy: { submittedAt: "desc" },
     });
+
+    const isMissedDaily =
+      !submission && achievement.isDaily && !!achievement.dailyDate && achievement.dailyDate < today;
 
     return NextResponse.json({
       achievement: {
@@ -36,11 +45,11 @@ export async function GET(
         title: achievement.title,
         description: achievement.description,
         points: achievement.points,
-        categoryName: achievement.category?.name ?? "Ostatní",
+        categoryName: achievement.isDaily ? "Denní výzva" : achievement.category?.name ?? "Ostatní",
         iconPath: achievement.iconPath,
         requiresApproval: achievement.requiresApproval,
       },
-      status: submission?.status ?? "undone",
+      status: submission ? submission.status : isMissedDaily ? "missed" : "undone",
       submission: submission
         ? {
             id: submission.id,

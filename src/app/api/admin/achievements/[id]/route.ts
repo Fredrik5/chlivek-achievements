@@ -4,6 +4,8 @@ import path from "node:path";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { handleApiError } from "@/lib/api";
+import { DAILY_DATE_REGEX, DUPLICATE_DAILY_DATE_ERROR } from "@/lib/date";
+import { Prisma } from "@/generated/prisma/client";
 
 export async function PATCH(
   request: NextRequest,
@@ -14,6 +16,11 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
+    const existing = await prisma.achievement.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
+    }
+
     const data: {
       title?: string;
       description?: string;
@@ -21,6 +28,7 @@ export async function PATCH(
       categoryId?: string | null;
       requiresApproval?: boolean;
       isActive?: boolean;
+      dailyDate?: string;
       order?: number;
     } = {};
 
@@ -48,9 +56,22 @@ export async function PATCH(
     }
     if (typeof body.requiresApproval === "boolean") data.requiresApproval = body.requiresApproval;
     if (typeof body.isActive === "boolean") data.isActive = body.isActive;
+    if (typeof body.dailyDate === "string" && existing.isDaily) {
+      if (!DAILY_DATE_REGEX.test(body.dailyDate)) {
+        return NextResponse.json({ error: "Neplatné datum." }, { status: 400 });
+      }
+      data.dailyDate = body.dailyDate;
+    }
 
-    const achievement = await prisma.achievement.update({ where: { id }, data });
-    return NextResponse.json({ achievement });
+    try {
+      const achievement = await prisma.achievement.update({ where: { id }, data });
+      return NextResponse.json({ achievement });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        return NextResponse.json({ error: DUPLICATE_DAILY_DATE_ERROR }, { status: 400 });
+      }
+      throw err;
+    }
   } catch (err) {
     return handleApiError(err);
   }

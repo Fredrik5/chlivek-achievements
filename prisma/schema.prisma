@@ -41,7 +41,10 @@ model Category {
 
 // Normal achievements belong to a Category. Secret achievements (isSecret =
 // true) are the hidden draw pool: they have no category and are never shown
-// in the regular achievement list, only revealed via SecretDraw.
+// in the regular achievement list, only revealed via SecretDraw. Daily
+// achievements (isDaily = true) also have no category; each is pinned to one
+// calendar day via dailyDate ("YYYY-MM-DD", unique) and only completable by
+// players while that day is current.
 model Achievement {
   id               String   @id @default(cuid())
   title            String
@@ -49,6 +52,8 @@ model Achievement {
   points           Int
   categoryId       String?
   isSecret         Boolean  @default(false)
+  isDaily          Boolean  @default(false)
+  dailyDate        String?  @unique
   requiresApproval Boolean  @default(true)
   isActive         Boolean  @default(true)
   iconPath         String?
@@ -61,6 +66,7 @@ model Achievement {
 
   @@index([categoryId])
   @@index([isSecret])
+  @@index([isDaily])
 }
 
 // A "žádost o schválení" — one attempt (by a player, by the secret-draw
