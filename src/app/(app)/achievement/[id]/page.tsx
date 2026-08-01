@@ -10,7 +10,7 @@ import { withMinDelay } from "@/lib/withMinDelay";
 const PHOTO_MAX_DIMENSION = 1600;
 const PHOTO_JPEG_QUALITY = 0.82;
 
-type Status = "undone" | "pending" | "approved";
+type Status = "undone" | "pending" | "approved" | "missed";
 
 interface DetailResponse {
   achievement: {
@@ -230,7 +230,15 @@ export default function AchievementDetailPage({
                 />
 
                 <StatusPill
-                  status={data.status === "approved" ? "approved" : data.status === "pending" ? "pending" : "locked"}
+                  status={
+                    data.status === "approved"
+                      ? "approved"
+                      : data.status === "pending"
+                        ? "pending"
+                        : data.status === "missed"
+                          ? "missed"
+                          : "locked"
+                  }
                 />
               </div>
 
@@ -390,6 +398,27 @@ export default function AchievementDetailPage({
                           ? "Odeslat ke schválení"
                           : "Označit jako splněné"}
                     </Button>
+                  </div>
+                )}
+
+                {data.status === "missed" && (
+                  <div
+                    style={{
+                      background: "var(--surface-card)",
+                      border: "1px solid var(--border-subtle)",
+                      borderRadius: "var(--radius-lg)",
+                      padding: "var(--space-4)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "var(--space-2)",
+                    }}
+                  >
+                    <span style={{ font: "var(--text-heading-sm)", color: "var(--text-muted)" }}>
+                      Tuhle výzvu jsi nestihl/a
+                    </span>
+                    <span style={{ font: "var(--text-body-sm)", color: "var(--text-disabled)" }}>
+                      Denní výzva platila jen ve svůj den a ten už uplynul.
+                    </span>
                   </div>
                 )}
 
