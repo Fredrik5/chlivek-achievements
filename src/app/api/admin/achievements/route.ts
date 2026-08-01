@@ -59,6 +59,12 @@ export async function POST(request: NextRequest) {
     if (!title || !description || !Number.isFinite(points) || points <= 0) {
       return NextResponse.json({ error: "Vyplň název, popis a kladný počet bodů." }, { status: 400 });
     }
+    if (isSecret && isDaily) {
+      return NextResponse.json(
+        { error: "Achievement nemůže být zároveň tajný a denní." },
+        { status: 400 },
+      );
+    }
     if (!isSecret && !isDaily && !categoryId) {
       return NextResponse.json({ error: "Vyber kategorii." }, { status: 400 });
     }

@@ -16,6 +16,11 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
+    const existing = await prisma.achievement.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
+    }
+
     const data: {
       title?: string;
       description?: string;
@@ -39,7 +44,7 @@ export async function PATCH(
     if (body.categoryId !== undefined) data.categoryId = body.categoryId || null;
     if (typeof body.requiresApproval === "boolean") data.requiresApproval = body.requiresApproval;
     if (typeof body.isActive === "boolean") data.isActive = body.isActive;
-    if (typeof body.dailyDate === "string") {
+    if (typeof body.dailyDate === "string" && existing.isDaily) {
       if (!DAILY_DATE_REGEX.test(body.dailyDate)) {
         return NextResponse.json({ error: "Neplatné datum." }, { status: 400 });
       }
