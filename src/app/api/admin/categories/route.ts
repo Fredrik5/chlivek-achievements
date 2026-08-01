@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await requireAdmin();
     const categories = await prisma.category.findMany({
-      orderBy: { createdAt: "asc" },
+      orderBy: { order: "asc" },
       include: { _count: { select: { achievements: true } } },
     });
     return NextResponse.json({
@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
     if (existing) {
       return NextResponse.json({ error: "Kategorie s tímto názvem už existuje." }, { status: 409 });
     }
-    const category = await prisma.category.create({ data: { name } });
+    const maxOrder = await prisma.category.aggregate({ _max: { order: true } });
+    const order = (maxOrder._max.order ?? -1) + 1;
+    const category = await prisma.category.create({ data: { name, order } });
     return NextResponse.json({ category: { id: category.id, name: category.name, count: 0 } });
   } catch (err) {
     return handleApiError(err);
