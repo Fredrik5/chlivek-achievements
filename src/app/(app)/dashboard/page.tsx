@@ -24,6 +24,19 @@ interface AchievementsResponse {
   achievements: AchievementItem[];
 }
 
+interface DailyToday {
+  id: string;
+  title: string;
+  description: string;
+  points: number;
+  iconPath: string | null;
+  status: Status;
+}
+
+interface DailyResponse {
+  today: DailyToday | null;
+}
+
 function statusToPillStatus(status: Status): "locked" | "pending" | "approved" {
   if (status === "approved") return "approved";
   if (status === "pending") return "pending";
@@ -34,11 +47,18 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<AchievementsResponse | null>(null);
   const [error, setError] = useState("");
+  const [daily, setDaily] = useState<DailyResponse | null>(null);
 
   useEffect(() => {
     apiFetch<AchievementsResponse>("/api/achievements")
       .then(setData)
       .catch((err) => setError(err instanceof Error ? err.message : "Chyba načítání."));
+  }, []);
+
+  useEffect(() => {
+    apiFetch<DailyResponse>("/api/daily")
+      .then(setDaily)
+      .catch(() => {});
   }, []);
 
   const remaining = data ? Math.max(0, data.nextMilestone - data.totalPoints) : 0;
@@ -98,6 +118,52 @@ export default function DashboardPage() {
                 label="Do další stovky"
                 sublabel={`${data.totalPoints} / ${data.nextMilestone} b. · ještě ${remaining} b. a odemkneš tajný achievement`}
               />
+            </div>
+
+            <div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "var(--space-2) 0" }}>
+                <span
+                  style={{
+                    font: "var(--text-label-caps)",
+                    letterSpacing: "var(--tracking-caps)",
+                    color: "var(--text-muted)",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Denní výzva
+                </span>
+                <button
+                  onClick={() => router.push("/daily-history")}
+                  style={{
+                    border: "none",
+                    background: "transparent",
+                    cursor: "pointer",
+                    font: "var(--text-body-sm)",
+                    color: "var(--text-muted)",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Zobrazit historii →
+                </button>
+              </div>
+              {daily?.today ? (
+                <AchievementCard
+                  item={{ ...daily.today, categoryName: "" }}
+                  onClick={() => router.push(`/achievement/${daily.today!.id}`)}
+                />
+              ) : (
+                <div
+                  style={{
+                    padding: "var(--space-4)",
+                    borderRadius: "var(--radius-lg)",
+                    border: "1px dashed var(--border-default)",
+                    color: "var(--text-disabled)",
+                    font: "var(--text-body-sm)",
+                  }}
+                >
+                  Dnes žádná denní výzva.
+                </div>
+              )}
             </div>
 
             {Array.from(groups.entries()).map(([categoryName, items]) => (
