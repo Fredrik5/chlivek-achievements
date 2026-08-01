@@ -1,4 +1,4 @@
-type PillStatus = "locked" | "pending" | "approved";
+type PillStatus = "locked" | "pending" | "approved" | "missed";
 
 interface StatusPillProps {
   status: PillStatus;
@@ -26,6 +26,12 @@ const STATUS_STYLES: Record<
     background: "var(--status-approved-bg)",
     border: "1px solid var(--status-approved-border)",
     color: "var(--status-approved-fg)",
+  },
+  missed: {
+    label: "Zmeškáno",
+    background: "var(--status-locked-bg)",
+    border: "1px solid var(--status-locked-border)",
+    color: "var(--status-locked-fg)",
   },
 };
 
