@@ -16,8 +16,14 @@ export async function GET(
       where: { id },
       include: { category: true },
     });
-    if (!achievement || achievement.isSecret) {
+    if (!achievement) {
       return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
+    }
+    if (achievement.isSecret) {
+      const draw = await prisma.secretDraw.findFirst({ where: { userId: user.id, achievementId: id } });
+      if (!draw) {
+        return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
+      }
     }
 
     const today = todayDateString();

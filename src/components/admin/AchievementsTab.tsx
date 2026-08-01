@@ -247,6 +247,19 @@ export function AchievementsTab() {
     }
   }
 
+  async function reorder(id: string, direction: "up" | "down") {
+    setError("");
+    try {
+      await apiFetch(`/api/admin/achievements/${id}/reorder`, {
+        method: "POST",
+        body: JSON.stringify({ direction }),
+      });
+      loadAchievements();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Něco se pokazilo.");
+    }
+  }
+
   async function deleteAchievement(id: string) {
     setError("");
     try {
@@ -378,104 +391,153 @@ export function AchievementsTab() {
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-            {filteredAchievements.map((a) => (
-              <div
-                key={a.id}
-                onClick={() => openEdit(a)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "var(--space-3)",
-                  flexWrap: "wrap",
-                  padding: "var(--space-3) var(--space-4)",
-                  borderRadius: "var(--radius-lg)",
-                  background: "var(--surface-card)",
-                  border: "1px solid var(--border-subtle)",
-                  opacity: a.isActive ? 1 : 0.55,
-                  cursor: "pointer",
-                }}
-              >
+            {filteredAchievements.map((a, index) => {
+              const prevItem = filteredAchievements[index - 1];
+              const nextItem = filteredAchievements[index + 1];
+              const canMoveUp = !!prevItem && prevItem.categoryId === a.categoryId;
+              const canMoveDown = !!nextItem && nextItem.categoryId === a.categoryId;
+
+              return (
                 <div
+                  key={a.id}
+                  onClick={() => openEdit(a)}
                   style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "var(--radius-md)",
-                    flexShrink: 0,
-                    background: "var(--surface-card-sunken)",
-                    border: "1px solid var(--border-subtle)",
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "center",
+                    gap: "var(--space-3)",
+                    flexWrap: "wrap",
+                    padding: "var(--space-3) var(--space-4)",
+                    borderRadius: "var(--radius-lg)",
+                    background: "var(--surface-card)",
+                    border: "1px solid var(--border-subtle)",
+                    opacity: a.isActive ? 1 : 0.55,
+                    cursor: "pointer",
                   }}
                 >
-                  <img
-                    src={a.iconPath ?? PLACEHOLDER_ICON}
-                    alt=""
-                    style={{ width: a.iconPath ? "100%" : "55%", height: a.iconPath ? "100%" : "55%", objectFit: "cover", opacity: a.iconPath ? 1 : 0.5, borderRadius: a.iconPath ? "var(--radius-md)" : 0 }}
-                  />
-                </div>
-                <div style={{ flex: "1 1 200px", minWidth: 160, display: "flex", flexDirection: "column", gap: 2 }}>
-                  <span style={{ font: "var(--text-heading-sm)", color: "var(--text-heading)" }}>{a.title}</span>
-                  <span
+                  <div
                     style={{
-                      font: "var(--text-body-sm)",
-                      color: "var(--text-muted)",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      width: 40,
+                      height: 40,
+                      borderRadius: "var(--radius-md)",
+                      flexShrink: 0,
+                      background: "var(--surface-card-sunken)",
+                      border: "1px solid var(--border-subtle)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    {a.description}
-                  </span>
-                </div>
-                <span
-                  style={{
-                    flexShrink: 0,
-                    padding: "4px 10px",
-                    borderRadius: "var(--radius-pill)",
-                    background: "var(--surface-card-sunken)",
-                    border: "1px solid var(--border-subtle)",
-                    font: "var(--text-label-caps)",
-                    letterSpacing: "var(--tracking-caps)",
-                    color: "var(--text-muted)",
-                  }}
-                >
-                  {a.categoryName}
-                </span>
-                {!a.requiresApproval && (
+                    <img
+                      src={a.iconPath ?? PLACEHOLDER_ICON}
+                      alt=""
+                      style={{ width: a.iconPath ? "100%" : "55%", height: a.iconPath ? "100%" : "55%", objectFit: "cover", opacity: a.iconPath ? 1 : 0.5, borderRadius: a.iconPath ? "var(--radius-md)" : 0 }}
+                    />
+                  </div>
+                  <div style={{ flex: "1 1 200px", minWidth: 160, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ font: "var(--text-heading-sm)", color: "var(--text-heading)" }}>{a.title}</span>
+                    <span
+                      style={{
+                        font: "var(--text-body-sm)",
+                        color: "var(--text-muted)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {a.description}
+                    </span>
+                  </div>
                   <span
                     style={{
                       flexShrink: 0,
                       padding: "4px 10px",
                       borderRadius: "var(--radius-pill)",
-                      background: "var(--status-approved-bg)",
-                      border: "1px solid var(--status-approved-border)",
-                      color: "var(--status-approved-fg)",
+                      background: "var(--surface-card-sunken)",
+                      border: "1px solid var(--border-subtle)",
                       font: "var(--text-label-caps)",
                       letterSpacing: "var(--tracking-caps)",
+                      color: "var(--text-muted)",
                     }}
                   >
-                    auto-schváleno
+                    {a.categoryName}
                   </span>
-                )}
-                <Badge points={a.points} size="sm" state="default" />
-                <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", minWidth: 50 }}>
-                  <span style={{ font: "700 16px/1.1 var(--font-body)", color: "var(--text-heading)" }}>
-                    {a.completedCount}
-                  </span>
-                  <span style={{ font: "var(--text-caption)", color: "var(--text-disabled)" }}>splnilo</span>
+                  {!a.requiresApproval && (
+                    <span
+                      style={{
+                        flexShrink: 0,
+                        padding: "4px 10px",
+                        borderRadius: "var(--radius-pill)",
+                        background: "var(--status-approved-bg)",
+                        border: "1px solid var(--status-approved-border)",
+                        color: "var(--status-approved-fg)",
+                        font: "var(--text-label-caps)",
+                        letterSpacing: "var(--tracking-caps)",
+                      }}
+                    >
+                      auto-schváleno
+                    </span>
+                  )}
+                  <Badge points={a.points} size="sm" state="default" />
+                  <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", minWidth: 50 }}>
+                    <span style={{ font: "700 16px/1.1 var(--font-body)", color: "var(--text-heading)" }}>
+                      {a.completedCount}
+                    </span>
+                    <span style={{ font: "var(--text-caption)", color: "var(--text-disabled)" }}>splnilo</span>
+                  </div>
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}
+                  >
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <button
+                        onClick={() => reorder(a.id, "up")}
+                        disabled={!canMoveUp}
+                        aria-label="Posunout nahoru"
+                        style={{
+                          width: 22,
+                          height: 18,
+                          borderRadius: "var(--radius-sm)",
+                          border: "1px solid var(--border-default)",
+                          background: "transparent",
+                          color: canMoveUp ? "var(--text-muted)" : "var(--text-disabled)",
+                          cursor: canMoveUp ? "pointer" : "default",
+                          opacity: canMoveUp ? 1 : 0.4,
+                          fontSize: 10,
+                          lineHeight: 1,
+                          padding: 0,
+                        }}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => reorder(a.id, "down")}
+                        disabled={!canMoveDown}
+                        aria-label="Posunout dolů"
+                        style={{
+                          width: 22,
+                          height: 18,
+                          borderRadius: "var(--radius-sm)",
+                          border: "1px solid var(--border-default)",
+                          background: "transparent",
+                          color: canMoveDown ? "var(--text-muted)" : "var(--text-disabled)",
+                          cursor: canMoveDown ? "pointer" : "default",
+                          opacity: canMoveDown ? 1 : 0.4,
+                          fontSize: 10,
+                          lineHeight: 1,
+                          padding: 0,
+                        }}
+                      >
+                        ▼
+                      </button>
+                    </div>
+                    <Toggle size="sm" checked={a.isActive} onChange={() => toggleActive(a)} label="Aktivní/skryto" />
+                    <Button variant="ghost" size="sm" onClick={() => openEdit(a)}>
+                      Upravit
+                    </Button>
+                  </div>
                 </div>
-                <div
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}
-                >
-                  <Toggle size="sm" checked={a.isActive} onChange={() => toggleActive(a)} label="Aktivní/skryto" />
-                  <Button variant="ghost" size="sm" onClick={() => openEdit(a)}>
-                    Upravit
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div

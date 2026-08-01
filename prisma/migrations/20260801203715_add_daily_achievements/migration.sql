@@ -13,10 +13,11 @@ CREATE TABLE "new_Achievement" (
     "requiresApproval" BOOLEAN NOT NULL DEFAULT true,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "iconPath" TEXT,
+    "order" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "Achievement_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
-INSERT INTO "new_Achievement" ("categoryId", "createdAt", "description", "iconPath", "id", "isActive", "isSecret", "points", "requiresApproval", "title") SELECT "categoryId", "createdAt", "description", "iconPath", "id", "isActive", "isSecret", "points", "requiresApproval", "title" FROM "Achievement";
+INSERT INTO "new_Achievement" ("categoryId", "createdAt", "description", "iconPath", "id", "isActive", "isSecret", "order", "points", "requiresApproval", "title") SELECT "categoryId", "createdAt", "description", "iconPath", "id", "isActive", "isSecret", "order", "points", "requiresApproval", "title" FROM "Achievement";
 DROP TABLE "Achievement";
 ALTER TABLE "new_Achievement" RENAME TO "Achievement";
 CREATE UNIQUE INDEX "Achievement_dailyDate_key" ON "Achievement"("dailyDate");

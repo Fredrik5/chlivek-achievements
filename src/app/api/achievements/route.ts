@@ -12,7 +12,7 @@ export async function GET() {
       prisma.achievement.findMany({
         where: { isSecret: false, isDaily: false, isActive: true },
         include: { category: true },
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ categoryId: "asc" }, { order: "asc" }],
       }),
       prisma.submission.findMany({
         where: { userId: user.id, status: { in: ["pending", "approved"] } },

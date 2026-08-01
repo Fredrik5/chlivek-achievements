@@ -16,7 +16,11 @@ export async function GET(request: NextRequest) {
     const achievements = await prisma.achievement.findMany({
       where,
       include: { category: true, _count: { select: { submissions: { where: { status: "approved" } } } } },
-      orderBy: isDailyFilter ? { dailyDate: "asc" } : { createdAt: "asc" },
+      orderBy: isDailyFilter
+        ? { dailyDate: "asc" }
+        : isSecret
+          ? { createdAt: "asc" }
+          : [{ categoryId: "asc" }, { order: "asc" }],
     });
 
     return NextResponse.json({
@@ -72,6 +76,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Vyber datum pro denní achievement." }, { status: 400 });
     }
 
+    const targetCategoryId = isSecret || isDaily ? null : categoryId;
+    const maxOrder = await prisma.achievement.aggregate({
+      _max: { order: true },
+      where: { categoryId: targetCategoryId },
+    });
+    const order = (maxOrder._max.order ?? -1) + 1;
+
     try {
       const achievement = await prisma.achievement.create({
         data: {
@@ -81,8 +92,9 @@ export async function POST(request: NextRequest) {
           isSecret,
           isDaily,
           dailyDate: isDaily ? dailyDate : null,
-          categoryId: isSecret || isDaily ? null : categoryId,
+          categoryId: targetCategoryId,
           requiresApproval,
+          order,
         },
       });
       return NextResponse.json({ achievement });

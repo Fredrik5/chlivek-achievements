@@ -13,7 +13,7 @@ export async function GET() {
 
     const draws = await prisma.secretDraw.findMany({
       where: { userId: user.id },
-      include: { achievement: true },
+      include: { achievement: true, submission: true },
     });
     const drawnByThreshold = new Map(draws.map((d) => [d.threshold, d]));
 
@@ -25,11 +25,13 @@ export async function GET() {
           threshold,
           state: "revealed" as const,
           achievement: {
+            id: draw.achievementId,
             title: draw.achievement.title,
             description: draw.achievement.description,
             points: draw.achievement.points,
             iconPath: draw.achievement.iconPath,
           },
+          submissionStatus: draw.submission.status,
         };
       }
       if (total >= threshold) {
