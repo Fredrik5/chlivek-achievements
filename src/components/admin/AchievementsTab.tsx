@@ -21,6 +21,8 @@ interface AchievementRow {
   categoryId: string | null;
   categoryName: string | null;
   isSecret: boolean;
+  isDaily: boolean;
+  dailyDate: string | null;
   requiresApproval: boolean;
   isActive: boolean;
   iconPath: string | null;
@@ -37,6 +39,8 @@ interface AchievementFormState {
   categoryId: string;
   requiresApproval: boolean;
   isSecret: boolean;
+  isDaily: boolean;
+  dailyDate: string;
 }
 
 const NEW_CATEGORY_VALUE = "__new__";
@@ -50,10 +54,13 @@ const EMPTY_FORM: AchievementFormState = {
   categoryId: "",
   requiresApproval: true,
   isSecret: false,
+  isDaily: false,
+  dailyDate: "",
 };
 
 export function AchievementsTab() {
-  const [subTab, setSubTab] = useState<"normal" | "secret">("normal");
+  const [subTab, setSubTab] = useState<"normal" | "secret" | "daily">("normal");
+  const [dailyAchievements, setDailyAchievements] = useState<AchievementRow[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [normalAchievements, setNormalAchievements] = useState<AchievementRow[]>([]);
   const [secretAchievements, setSecretAchievements] = useState<AchievementRow[]>([]);
@@ -88,6 +95,9 @@ export function AchievementsTab() {
     apiFetch<{ achievements: AchievementRow[] }>("/api/admin/achievements?secret=true")
       .then((r) => setSecretAchievements(r.achievements))
       .catch((err) => setError(err instanceof Error ? err.message : "Chyba načítání."));
+    apiFetch<{ achievements: AchievementRow[] }>("/api/admin/achievements?daily=true")
+      .then((r) => setDailyAchievements(r.achievements))
+      .catch((err) => setError(err instanceof Error ? err.message : "Chyba načítání."));
   }
 
   useEffect(() => {
@@ -95,8 +105,14 @@ export function AchievementsTab() {
     loadAchievements();
   }, []);
 
-  function openNew(isSecret: boolean) {
-    setForm({ ...EMPTY_FORM, isSecret, requiresApproval: !isSecret, categoryId: categories[0]?.id ?? "" });
+  function openNew(kind: "normal" | "secret" | "daily") {
+    setForm({
+      ...EMPTY_FORM,
+      isSecret: kind === "secret",
+      isDaily: kind === "daily",
+      requiresApproval: kind !== "secret",
+      categoryId: kind === "normal" ? categories[0]?.id ?? "" : "",
+    });
     setNewCategoryInModal("");
     setCurrentIconPath(null);
     setIconFile(null);
@@ -114,6 +130,8 @@ export function AchievementsTab() {
       categoryId: a.categoryId ?? "",
       requiresApproval: a.requiresApproval,
       isSecret: a.isSecret,
+      isDaily: a.isDaily,
+      dailyDate: a.dailyDate ?? "",
     });
     setNewCategoryInModal("");
     setCurrentIconPath(a.iconPath);
@@ -156,9 +174,13 @@ export function AchievementsTab() {
   async function saveForm() {
     if (!form) return;
     setError("");
+    if (form.isDaily && !form.dailyDate) {
+      setError("Vyber datum pro denní achievement.");
+      return;
+    }
     try {
       let categoryId = form.categoryId;
-      if (!form.isSecret && categoryId === NEW_CATEGORY_VALUE) {
+      if (!form.isSecret && !form.isDaily && categoryId === NEW_CATEGORY_VALUE) {
         if (!newCategoryInModal.trim()) {
           setError("Zadej název nové kategorie.");
           return;
@@ -174,9 +196,11 @@ export function AchievementsTab() {
         title: form.title,
         description: form.description,
         points: Number(form.points),
-        categoryId: form.isSecret ? null : categoryId,
+        categoryId: form.isSecret || form.isDaily ? null : categoryId,
         requiresApproval: form.requiresApproval,
         isSecret: form.isSecret,
+        isDaily: form.isDaily,
+        dailyDate: form.isDaily ? form.dailyDate : undefined,
       };
 
       let achievementId = form.id;
@@ -317,9 +341,23 @@ export function AchievementsTab() {
           >
             Pool tajných
           </button>
+          <button
+            onClick={() => setSubTab("daily")}
+            style={{
+              border: "none",
+              cursor: "pointer",
+              padding: "8px 16px",
+              borderRadius: "var(--radius-pill)",
+              font: "var(--text-label)",
+              background: subTab === "daily" ? "var(--surface-primary)" : "transparent",
+              color: subTab === "daily" ? "var(--text-on-primary)" : "var(--text-muted)",
+            }}
+          >
+            Denní
+          </button>
         </div>
-        <Button variant="gold" size="md" onClick={() => openNew(subTab === "secret")}>
-          {subTab === "secret" ? "+ Přidat tajný" : "+ Přidat achievement"}
+        <Button variant="gold" size="md" onClick={() => openNew(subTab)}>
+          {subTab === "secret" ? "+ Přidat tajný" : subTab === "daily" ? "+ Přidat denní" : "+ Přidat achievement"}
         </Button>
       </div>
 
@@ -556,7 +594,7 @@ export function AchievementsTab() {
             </div>
           </div>
         </>
-      ) : (
+      ) : subTab === "secret" ? (
         <>
           <span style={{ font: "var(--text-body-sm)", color: "var(--text-muted)" }}>
             Sada tajných achievementů, ze které se losuje po dosažení každé stovky bodů. Hráči obsah
@@ -650,6 +688,112 @@ export function AchievementsTab() {
             ))}
           </div>
         </>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+          {dailyAchievements.map((a) => (
+            <div
+              key={a.id}
+              onClick={() => openEdit(a)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-3)",
+                flexWrap: "wrap",
+                padding: "var(--space-3) var(--space-4)",
+                borderRadius: "var(--radius-lg)",
+                background: "var(--surface-card)",
+                border: "1px solid var(--border-subtle)",
+                opacity: a.isActive ? 1 : 0.55,
+                cursor: "pointer",
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "var(--radius-md)",
+                  flexShrink: 0,
+                  background: "var(--surface-card-sunken)",
+                  border: "1px solid var(--border-subtle)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <img
+                  src={a.iconPath ?? PLACEHOLDER_ICON}
+                  alt=""
+                  style={{ width: a.iconPath ? "100%" : "55%", height: a.iconPath ? "100%" : "55%", objectFit: "cover", opacity: a.iconPath ? 1 : 0.5, borderRadius: a.iconPath ? "var(--radius-md)" : 0 }}
+                />
+              </div>
+              <div style={{ flex: "1 1 200px", minWidth: 160, display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ font: "var(--text-heading-sm)", color: "var(--text-heading)" }}>{a.title}</span>
+                <span
+                  style={{
+                    font: "var(--text-body-sm)",
+                    color: "var(--text-muted)",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {a.description}
+                </span>
+              </div>
+              <span
+                style={{
+                  flexShrink: 0,
+                  padding: "4px 10px",
+                  borderRadius: "var(--radius-pill)",
+                  background: "var(--surface-card-sunken)",
+                  border: "1px solid var(--border-subtle)",
+                  font: "var(--text-label-caps)",
+                  letterSpacing: "var(--tracking-caps)",
+                  color: "var(--text-muted)",
+                }}
+              >
+                {a.dailyDate ? new Date(`${a.dailyDate}T00:00:00`).toLocaleDateString("cs-CZ") : ""}
+              </span>
+              {!a.requiresApproval && (
+                <span
+                  style={{
+                    flexShrink: 0,
+                    padding: "4px 10px",
+                    borderRadius: "var(--radius-pill)",
+                    background: "var(--status-approved-bg)",
+                    border: "1px solid var(--status-approved-border)",
+                    color: "var(--status-approved-fg)",
+                    font: "var(--text-label-caps)",
+                    letterSpacing: "var(--tracking-caps)",
+                  }}
+                >
+                  auto-schváleno
+                </span>
+              )}
+              <Badge points={a.points} size="sm" state="default" />
+              <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", minWidth: 50 }}>
+                <span style={{ font: "700 16px/1.1 var(--font-body)", color: "var(--text-heading)" }}>
+                  {a.completedCount}
+                </span>
+                <span style={{ font: "var(--text-caption)", color: "var(--text-disabled)" }}>splnilo</span>
+              </div>
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{ display: "flex", alignItems: "center", gap: "var(--space-3)" }}
+              >
+                <Toggle size="sm" checked={a.isActive} onChange={() => toggleActive(a)} label="Aktivní/skryto" />
+                <Button variant="ghost" size="sm" onClick={() => openEdit(a)}>
+                  Upravit
+                </Button>
+              </div>
+            </div>
+          ))}
+          {dailyAchievements.length === 0 && (
+            <span style={{ font: "var(--text-body-sm)", color: "var(--text-disabled)" }}>
+              Zatím žádný denní achievement.
+            </span>
+          )}
+        </div>
       )}
 
       {form && (
@@ -689,7 +833,7 @@ export function AchievementsTab() {
                 />
               </ModalField>
             </div>
-            {!form.isSecret && (
+            {!form.isSecret && !form.isDaily && (
               <div style={{ flex: 2 }}>
                 <ModalField label="Kategorie">
                   <select
@@ -708,9 +852,22 @@ export function AchievementsTab() {
                 </ModalField>
               </div>
             )}
+            {form.isDaily && (
+              <div style={{ flex: 2 }}>
+                <ModalField label="Datum">
+                  <input
+                    type="date"
+                    className="cca-input"
+                    value={form.dailyDate}
+                    onChange={(e) => setForm({ ...form, dailyDate: e.target.value })}
+                    style={{ minHeight: 40, padding: "10px 12px", boxShadow: "none" }}
+                  />
+                </ModalField>
+              </div>
+            )}
           </div>
 
-          {!form.isSecret && form.categoryId === NEW_CATEGORY_VALUE && (
+          {!form.isSecret && !form.isDaily && form.categoryId === NEW_CATEGORY_VALUE && (
             <ModalField label="Název nové kategorie">
               <input
                 className="cca-input"
