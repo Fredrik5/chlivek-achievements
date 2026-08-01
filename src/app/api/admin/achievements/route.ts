@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         ? { dailyDate: "asc" }
         : isSecret
           ? { createdAt: "asc" }
-          : [{ categoryId: "asc" }, { order: "asc" }],
+          : [{ category: { order: "asc" } }, { order: "asc" }],
     });
 
     return NextResponse.json({
