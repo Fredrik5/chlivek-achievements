@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { Badge, Button, ProgressBar } from "@/components/ui";
+import { Badge, Button, ProgressBar, StatusPill } from "@/components/ui";
 import { apiFetch } from "@/lib/apiClient";
 
 type SlotState = "locked" | "available" | "revealed";
+type SubmissionStatus = "pending" | "approved" | "rejected";
 
 interface Slot {
   threshold: number;
   state: SlotState;
-  achievement?: { title: string; description: string; points: number; iconPath: string | null };
+  achievement?: { id: string; title: string; description: string; points: number; iconPath: string | null };
+  submissionStatus?: SubmissionStatus;
 }
 
 interface SecretResponse {
@@ -249,6 +252,7 @@ function SlotCard({
   isDrawing: boolean;
   onDraw: () => void;
 }) {
+  const router = useRouter();
   const isLocked = slot.state === "locked";
   const isAvailable = slot.state === "available";
   const isRevealed = slot.state === "revealed";
@@ -272,16 +276,27 @@ function SlotCard({
     cardBorder = `1px solid ${VIOLET_BORDER}`;
     titleColor = "var(--text-muted)";
   } else if (isRevealed && slot.achievement) {
+    const isApproved = slot.submissionStatus === "approved";
     title = slot.achievement.title;
     subtext = slot.achievement.description;
     badgePoints = slot.achievement.points;
-    badgeState = "approved";
-    cardBorder = "1px solid var(--status-approved-border)";
-    cardShadow = "var(--status-approved-glow), var(--shadow-card)";
+    badgeState = isApproved ? "approved" : "default";
+    cardBorder = `1px solid ${isApproved ? "var(--status-approved-border)" : "var(--border-strong)"}`;
+    cardShadow = isApproved ? "var(--status-approved-glow), var(--shadow-card)" : "var(--shadow-card)";
   }
 
   return (
     <div
+      role={isRevealed ? "button" : undefined}
+      tabIndex={isRevealed ? 0 : undefined}
+      onClick={isRevealed && slot.achievement ? () => router.push(`/achievement/${slot.achievement!.id}`) : undefined}
+      onKeyDown={
+        isRevealed && slot.achievement
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") router.push(`/achievement/${slot.achievement!.id}`);
+            }
+          : undefined
+      }
       style={{
         position: "relative",
         display: "flex",
@@ -293,6 +308,7 @@ function SlotCard({
         border: cardBorder,
         boxShadow: cardShadow,
         overflow: "hidden",
+        cursor: isRevealed ? "pointer" : "default",
       }}
     >
       <div
@@ -369,24 +385,10 @@ function SlotCard({
         )}
 
         {isRevealed && (
-          <span
-            style={{
-              alignSelf: "flex-start",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "4px 10px",
-              borderRadius: "var(--radius-pill)",
-              background: "var(--status-approved-bg)",
-              color: "var(--status-approved-fg)",
-              border: "1px solid var(--status-approved-border)",
-              font: "var(--text-label-caps)",
-              letterSpacing: "var(--tracking-caps)",
-              textTransform: "uppercase",
-            }}
-          >
-            Odhaleno
-          </span>
+          <StatusPill
+            compact
+            status={slot.submissionStatus === "approved" ? "approved" : "pending"}
+          />
         )}
       </div>
     </div>
