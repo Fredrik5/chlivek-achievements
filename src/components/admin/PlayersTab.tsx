@@ -61,12 +61,17 @@ export function PlayersTab() {
     setAddError("");
     setAddModalOpen(true);
     try {
-      const [normal, secret] = await Promise.all([
+      const [normal, secret, daily] = await Promise.all([
         apiFetch<{ achievements: AchievementOption[] }>("/api/admin/achievements?secret=false"),
         apiFetch<{ achievements: AchievementOption[] }>("/api/admin/achievements?secret=true"),
+        apiFetch<{ achievements: AchievementOption[] }>("/api/admin/achievements?daily=true"),
       ]);
       const active = new Set(detail?.activeAchievementIds ?? []);
-      setOptions([...normal.achievements, ...secret.achievements].filter((a) => !active.has(a.id)));
+      setOptions(
+        [...normal.achievements, ...secret.achievements, ...daily.achievements].filter(
+          (a) => !active.has(a.id),
+        ),
+      );
     } catch (err) {
       setAddError(err instanceof Error ? err.message : "Chyba načítání.");
     }
