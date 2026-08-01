@@ -41,7 +41,7 @@ export default function DailyHistoryPage() {
   }, []);
 
   return (
-    <AppShell title="Historie denních výzev" activeTab="dashboard">
+    <AppShell title="Daily achievements history" activeTab="dashboard">
       <div style={{ padding: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         {error && <span style={{ color: "var(--status-pending-fg)" }}>{error}</span>}
         {history?.length === 0 && (
