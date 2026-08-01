@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { handleApiError } from "@/lib/api";
+import { todayDateString } from "@/lib/date";
 
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
@@ -21,6 +22,9 @@ export async function POST(
     const achievement = await prisma.achievement.findUnique({ where: { id } });
     if (!achievement || achievement.isSecret || !achievement.isActive) {
       return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
+    }
+    if (achievement.isDaily && achievement.dailyDate !== todayDateString()) {
+      return NextResponse.json({ error: "Tento den už uplynul." }, { status: 400 });
     }
 
     const existing = await prisma.submission.findFirst({
