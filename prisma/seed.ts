@@ -107,7 +107,11 @@ async function main() {
     },
   ];
 
+  const categoryOrderCounters: Record<string, number> = {};
   for (const a of normalAchievements) {
+    const order = categoryOrderCounters[a.category] ?? 0;
+    categoryOrderCounters[a.category] = order + 1;
+
     const existing = await prisma.achievement.findFirst({
       where: { title: a.title, isSecret: false },
     });
@@ -120,6 +124,7 @@ async function main() {
         categoryId: categories[a.category],
         isSecret: false,
         requiresApproval: true,
+        order,
       },
     });
   }
