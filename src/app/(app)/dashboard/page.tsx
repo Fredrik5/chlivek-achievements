@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
-import { Badge, CategoryHeader, ProgressBar, StatusPill } from "@/components/ui";
+import { Badge, Button, CategoryHeader, ProgressBar, StatusPill } from "@/components/ui";
 import { apiFetch } from "@/lib/apiClient";
+
+const VIOLET_BORDER = "rgba(147,72,178,0.4)";
+const VIOLET_WASH = "rgba(107,38,130,0.16)";
 
 type Status = "undone" | "pending" | "approved";
 
@@ -37,6 +40,11 @@ interface DailyResponse {
   today: DailyToday | null;
 }
 
+interface SecretSummary {
+  hasAvailableNow: boolean;
+  availableCount: number;
+}
+
 function statusToPillStatus(status: Status): "locked" | "pending" | "approved" {
   if (status === "approved") return "approved";
   if (status === "pending") return "pending";
@@ -48,6 +56,7 @@ export default function DashboardPage() {
   const [data, setData] = useState<AchievementsResponse | null>(null);
   const [error, setError] = useState("");
   const [daily, setDaily] = useState<DailyResponse | null>(null);
+  const [secret, setSecret] = useState<SecretSummary | null>(null);
 
   useEffect(() => {
     apiFetch<AchievementsResponse>("/api/achievements")
@@ -58,6 +67,12 @@ export default function DashboardPage() {
   useEffect(() => {
     apiFetch<DailyResponse>("/api/daily")
       .then(setDaily)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    apiFetch<SecretSummary>("/api/secret")
+      .then(setSecret)
       .catch(() => {});
   }, []);
 
@@ -118,6 +133,29 @@ export default function DashboardPage() {
                 label="Do další stovky"
                 sublabel={`${data.totalPoints} / ${data.nextMilestone} b. · ještě ${remaining} b. a odemkneš tajný achievement`}
               />
+              {secret && secret.availableCount > 0 && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "var(--space-3)",
+                    padding: "var(--space-3)",
+                    borderRadius: "var(--radius-md)",
+                    background: `linear-gradient(160deg, ${VIOLET_WASH}, var(--surface-card-sunken))`,
+                    border: `1px solid ${VIOLET_BORDER}`,
+                    boxShadow: "0 0 0 1px rgba(200,148,43,0.5), 0 0 18px rgba(147,72,178,0.3)",
+                  }}
+                >
+                  <span style={{ font: "var(--text-body-sm)", color: "var(--text-heading)" }}>
+                    {secret.availableCount === 1
+                      ? "Máš k dispozici 1 losování tajného achievementu."
+                      : `Máš k dispozici ${secret.availableCount} losování tajných achievementů.`}
+                  </span>
+                  <Button variant="gold" size="md" fullWidth onClick={() => router.push("/secret")}>
+                    Vylosovat →
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div>
