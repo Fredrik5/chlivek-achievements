@@ -285,6 +285,9 @@ function SlotCard({
     cardShadow = isApproved ? "var(--status-approved-glow), var(--shadow-card)" : "var(--shadow-card)";
   }
 
+  const revealedPillStatus =
+    slot.submissionStatus === "approved" ? "approved" : slot.submissionStatus === "pending" ? "pending" : "locked";
+
   return (
     <div
       role={isRevealed ? "button" : undefined}
@@ -384,12 +387,7 @@ function SlotCard({
           </Button>
         )}
 
-        {isRevealed && (
-          <StatusPill
-            compact
-            status={slot.submissionStatus === "approved" ? "approved" : "pending"}
-          />
-        )}
+        {isRevealed && <StatusPill compact status={revealedPillStatus} />}
       </div>
     </div>
   );

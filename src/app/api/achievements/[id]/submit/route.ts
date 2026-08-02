@@ -20,11 +20,18 @@ export async function POST(
     const user = await requireUser();
 
     const achievement = await prisma.achievement.findUnique({ where: { id } });
-    if (!achievement || achievement.isSecret || !achievement.isActive) {
+    if (!achievement || !achievement.isActive) {
       return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
     }
     if (achievement.isDaily && achievement.dailyDate !== todayDateString()) {
       return NextResponse.json({ error: "Tento den už uplynul." }, { status: 400 });
+    }
+    let secretDraw = null;
+    if (achievement.isSecret) {
+      secretDraw = await prisma.secretDraw.findFirst({ where: { userId: user.id, achievementId: id } });
+      if (!secretDraw) {
+        return NextResponse.json({ error: "Achievement nenalezen." }, { status: 404 });
+      }
     }
 
     const existing = await prisma.submission.findFirst({
@@ -61,16 +68,22 @@ export async function POST(
 
     const autoApprove = !achievement.requiresApproval;
     const now = new Date();
-    const submission = await prisma.submission.create({
-      data: {
-        userId: user.id,
-        achievementId: id,
-        note,
-        photoPath,
-        source: "player",
-        status: autoApprove ? "approved" : "pending",
-        reviewedAt: autoApprove ? now : null,
-      },
+    const submission = await prisma.$transaction(async (tx) => {
+      const created = await tx.submission.create({
+        data: {
+          userId: user.id,
+          achievementId: id,
+          note,
+          photoPath,
+          source: secretDraw ? "secret_draw" : "player",
+          status: autoApprove ? "approved" : "pending",
+          reviewedAt: autoApprove ? now : null,
+        },
+      });
+      if (secretDraw) {
+        await tx.secretDraw.update({ where: { id: secretDraw.id }, data: { submissionId: created.id } });
+      }
+      return created;
     });
 
     return NextResponse.json({ submission: { id: submission.id, status: submission.status } });

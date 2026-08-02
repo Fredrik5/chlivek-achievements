@@ -54,21 +54,8 @@ export async function POST(request: NextRequest) {
     const pick = pool[Math.floor(Math.random() * pool.length)];
 
     try {
-      await prisma.$transaction(async (tx) => {
-        const autoApprove = !pick.requiresApproval;
-        const now = new Date();
-        const submission = await tx.submission.create({
-          data: {
-            userId: user.id,
-            achievementId: pick.id,
-            source: "secret_draw",
-            status: autoApprove ? "approved" : "pending",
-            reviewedAt: autoApprove ? now : null,
-          },
-        });
-        await tx.secretDraw.create({
-          data: { userId: user.id, threshold, achievementId: pick.id, submissionId: submission.id },
-        });
+      await prisma.secretDraw.create({
+        data: { userId: user.id, threshold, achievementId: pick.id },
       });
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {

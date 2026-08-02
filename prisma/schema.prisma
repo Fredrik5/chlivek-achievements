@@ -98,17 +98,20 @@ model Submission {
 
 // Evidence of which 100-point milestone a player has already drawn a secret
 // achievement for, so they can never draw twice on the same threshold.
+// submissionId is null between the reveal and the player actually
+// submitting the achievement for review — drawing only assigns which
+// secret achievement they got, it doesn't complete it.
 model SecretDraw {
   id            String   @id @default(cuid())
   userId        String
   threshold     Int
   achievementId String
-  submissionId  String   @unique
+  submissionId  String?  @unique
   drawnAt       DateTime @default(now())
 
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   achievement Achievement @relation(fields: [achievementId], references: [id])
-  submission  Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  submission  Submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@unique([userId, threshold])
 }

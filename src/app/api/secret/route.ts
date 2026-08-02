@@ -13,9 +13,18 @@ export async function GET() {
 
     const draws = await prisma.secretDraw.findMany({
       where: { userId: user.id },
-      include: { achievement: true, submission: true },
+      include: { achievement: true },
     });
     const drawnByThreshold = new Map(draws.map((d) => [d.threshold, d]));
+
+    const drawnAchievementIds = draws.map((d) => d.achievementId);
+    const submissions = drawnAchievementIds.length
+      ? await prisma.submission.findMany({
+          where: { userId: user.id, achievementId: { in: drawnAchievementIds } },
+          orderBy: { submittedAt: "asc" },
+        })
+      : [];
+    const submissionByAchievement = new Map(submissions.map((s) => [s.achievementId, s]));
 
     const thresholds = [...reached, upcoming];
     const slots = thresholds.map((threshold) => {
@@ -31,7 +40,7 @@ export async function GET() {
             points: draw.achievement.points,
             iconPath: draw.achievement.iconPath,
           },
-          submissionStatus: draw.submission.status,
+          submissionStatus: submissionByAchievement.get(draw.achievementId)?.status,
         };
       }
       if (total >= threshold) {
