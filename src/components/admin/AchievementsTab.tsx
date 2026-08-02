@@ -260,6 +260,19 @@ export function AchievementsTab() {
     }
   }
 
+  async function reorderCategory(id: string, direction: "up" | "down") {
+    setError("");
+    try {
+      await apiFetch(`/api/admin/categories/${id}/reorder`, {
+        method: "POST",
+        body: JSON.stringify({ direction }),
+      });
+      loadCategories();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Něco se pokazilo.");
+    }
+  }
+
   async function deleteAchievement(id: string) {
     setError("");
     try {
@@ -553,8 +566,11 @@ export function AchievementsTab() {
           >
             <span style={{ font: "var(--text-heading-sm)", color: "var(--text-heading)" }}>Kategorie</span>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)", alignItems: "center" }}>
-              {categories.map((c) =>
-                renamingId === c.id ? (
+              {categories.map((c, index) => {
+                const canMoveUp = index > 0;
+                const canMoveDown = index < categories.length - 1;
+
+                return renamingId === c.id ? (
                   <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                     <input
                       className="cca-input"
@@ -610,6 +626,48 @@ export function AchievementsTab() {
                     <span style={{ font: "var(--text-caption)", color: "var(--text-disabled)", margin: "0 4px" }}>
                       {c.count}
                     </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <button
+                        onClick={() => reorderCategory(c.id, "up")}
+                        disabled={!canMoveUp}
+                        aria-label="Posunout nahoru"
+                        style={{
+                          width: 22,
+                          height: 18,
+                          borderRadius: "var(--radius-sm)",
+                          border: "1px solid var(--border-default)",
+                          background: "transparent",
+                          color: canMoveUp ? "var(--text-muted)" : "var(--text-disabled)",
+                          cursor: canMoveUp ? "pointer" : "default",
+                          opacity: canMoveUp ? 1 : 0.4,
+                          fontSize: 10,
+                          lineHeight: 1,
+                          padding: 0,
+                        }}
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => reorderCategory(c.id, "down")}
+                        disabled={!canMoveDown}
+                        aria-label="Posunout dolů"
+                        style={{
+                          width: 22,
+                          height: 18,
+                          borderRadius: "var(--radius-sm)",
+                          border: "1px solid var(--border-default)",
+                          background: "transparent",
+                          color: canMoveDown ? "var(--text-muted)" : "var(--text-disabled)",
+                          cursor: canMoveDown ? "pointer" : "default",
+                          opacity: canMoveDown ? 1 : 0.4,
+                          fontSize: 10,
+                          lineHeight: 1,
+                          padding: 0,
+                        }}
+                      >
+                        ▼
+                      </button>
+                    </div>
                     <button
                       onClick={() => {
                         setRenamingId(c.id);
@@ -639,8 +697,8 @@ export function AchievementsTab() {
                       ✕
                     </button>
                   </div>
-                ),
-              )}
+                );
+              })}
             </div>
             <div style={{ display: "flex", gap: "var(--space-2)", marginTop: "var(--space-1)" }}>
               <input
