@@ -218,11 +218,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-
-            <div>
-              <CategoryHeader title="Legendary" count={1} />
-              <SecretTeaserCard onClick={() => router.push("/secret")} />
-            </div>
           </>
         )}
       </div>
@@ -302,51 +297,6 @@ function AchievementCard({ item, onClick }: { item: AchievementItem; onClick: ()
         <div style={{ marginTop: "var(--space-2)" }}>
           <StatusPill status={statusToPillStatus(item.status)} compact />
         </div>
-      </div>
-    </button>
-  );
-}
-
-function SecretTeaserCard({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        display: "flex",
-        alignItems: "flex-start",
-        gap: "var(--space-4)",
-        padding: "var(--space-4)",
-        borderRadius: "var(--radius-lg)",
-        background: "var(--surface-card)",
-        border: "1px dashed var(--border-default)",
-        opacity: 0.85,
-        cursor: "pointer",
-        textAlign: "left",
-        width: "100%",
-      }}
-    >
-      <div
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: "var(--radius-md)",
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--surface-card-sunken)",
-          border: "1px dashed var(--border-default)",
-        }}
-      >
-        <span style={{ font: "400 22px/1 var(--font-display)", color: "var(--text-muted)" }}>?</span>
-      </div>
-      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        <span style={{ font: "var(--text-heading-sm)", color: "var(--text-heading)" }}>
-          ??? Tajný achievement
-        </span>
-        <span style={{ font: "var(--text-body-sm)", color: "var(--text-muted)" }}>
-          Odhalí se, až dosáhneš další stovky bodů. Klepnutím zobrazíš detail losování.
-        </span>
       </div>
     </button>
   );
