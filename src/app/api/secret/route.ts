@@ -53,6 +53,7 @@ export async function GET() {
       points: total,
       nextThreshold: upcoming,
       hasAvailableNow: slots.some((s) => s.state === "available"),
+      availableCount: slots.filter((s) => s.state === "available").length,
       slots,
     });
   } catch (err) {
