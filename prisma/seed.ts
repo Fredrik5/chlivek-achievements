@@ -41,11 +41,11 @@ async function main() {
     "Výlety",
   ];
   const categories: Record<string, string> = {};
-  for (const name of categoryNames) {
+  for (const [order, name] of categoryNames.entries()) {
     const cat = await prisma.category.upsert({
       where: { name },
       update: {},
-      create: { name },
+      create: { name, order },
     });
     categories[name] = cat.id;
   }
