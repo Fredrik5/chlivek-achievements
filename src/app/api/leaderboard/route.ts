@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const filter = request.nextUrl.searchParams.get("filter") === "today" ? "today" : "all";
     const players = await prisma.user.findMany({
-      where: { role: "player" },
+      where: { username: { not: "gm" } },
       select: { id: true, username: true },
     });
 
