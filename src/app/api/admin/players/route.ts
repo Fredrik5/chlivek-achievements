@@ -11,8 +11,7 @@ export async function GET(request: NextRequest) {
 
     const players = await prisma.user.findMany({
       where: {
-        role: "player",
-        ...(search ? { username: { contains: search } } : {}),
+        username: { not: "gm", ...(search ? { contains: search } : {}) },
       },
       select: { id: true, username: true },
       orderBy: { username: "asc" },

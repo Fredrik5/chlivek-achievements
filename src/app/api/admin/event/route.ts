@@ -10,7 +10,7 @@ export async function GET() {
     const [settings, playersCount, pendingCount, activeAchievementsCount, secretDrawsCount] =
       await Promise.all([
         prisma.eventSettings.findUnique({ where: { id: 1 } }),
-        prisma.user.count({ where: { role: "player" } }),
+        prisma.user.count({ where: { username: { not: "gm" } } }),
         prisma.submission.count({ where: { status: "pending" } }),
         prisma.achievement.count({ where: { isSecret: false, isActive: true } }),
         prisma.secretDraw.count(),
