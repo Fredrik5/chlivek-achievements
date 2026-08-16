@@ -35,6 +35,11 @@ export function PlayersTab() {
   const [pickedId, setPickedId] = useState("");
   const [addError, setAddError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pwModalOpen, setPwModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [newPassword2, setNewPassword2] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwSubmitting, setPwSubmitting] = useState(false);
 
   function loadPlayers() {
     const params = new URLSearchParams();
@@ -110,6 +115,41 @@ export function PlayersTab() {
     }
   }
 
+  function openPasswordModal() {
+    setNewPassword("");
+    setNewPassword2("");
+    setPwError("");
+    setPwModalOpen(true);
+  }
+
+  function closePasswordModal() {
+    setPwModalOpen(false);
+    setNewPassword("");
+    setNewPassword2("");
+    setPwError("");
+  }
+
+  async function savePassword() {
+    if (!selectedId || !newPassword || !newPassword2 || pwSubmitting) return;
+    if (newPassword !== newPassword2) {
+      setPwError("Hesla se neshodují.");
+      return;
+    }
+    setPwError("");
+    setPwSubmitting(true);
+    try {
+      await apiFetch(`/api/admin/players/${selectedId}/password`, {
+        method: "POST",
+        body: JSON.stringify({ newPassword }),
+      });
+      closePasswordModal();
+    } catch (err) {
+      setPwError(err instanceof Error ? err.message : "Něco se pokazilo.");
+    } finally {
+      setPwSubmitting(false);
+    }
+  }
+
   return (
     <div style={{ display: "flex", gap: "var(--space-4)", flexWrap: "wrap", alignItems: "flex-start" }}>
       <div style={{ flex: "1 1 240px", minWidth: 220, display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
@@ -169,6 +209,12 @@ export function PlayersTab() {
             <span style={{ font: "400 34px/1 var(--font-display)", color: "var(--accent-gold)" }}>
               {detail.player.points}
             </span>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Button variant="ghost" size="sm" onClick={openPasswordModal}>
+              Změnit heslo
+            </Button>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -317,6 +363,47 @@ export function PlayersTab() {
               onClick={confirmAdd}
             >
               {submitting ? "Ukládám…" : "Uložit"}
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {pwModalOpen && (
+        <Modal onClose={closePasswordModal}>
+          <span style={{ font: "var(--text-heading-md)", color: "var(--text-heading)" }}>
+            Změnit heslo
+          </span>
+          <ModalField label="Nové heslo">
+            <input
+              type="password"
+              className="cca-input"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              style={{ minHeight: 44, padding: "10px 14px" }}
+            />
+          </ModalField>
+          <ModalField label="Nové heslo znovu">
+            <input
+              type="password"
+              className="cca-input"
+              value={newPassword2}
+              onChange={(e) => setNewPassword2(e.target.value)}
+              style={{ minHeight: 44, padding: "10px 14px" }}
+            />
+          </ModalField>
+          {pwError && <span style={{ color: "var(--status-pending-fg)" }}>{pwError}</span>}
+          <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-2)" }}>
+            <Button variant="ghost" size="md" fullWidth onClick={closePasswordModal}>
+              Zrušit
+            </Button>
+            <Button
+              variant="gold"
+              size="md"
+              fullWidth
+              disabled={!newPassword || !newPassword2 || pwSubmitting}
+              onClick={savePassword}
+            >
+              {pwSubmitting ? "Ukládám…" : "Uložit"}
             </Button>
           </div>
         </Modal>
