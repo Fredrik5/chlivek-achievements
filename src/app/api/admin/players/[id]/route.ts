@@ -13,7 +13,7 @@ export async function GET(
     const { id } = await params;
 
     const player = await prisma.user.findUnique({ where: { id } });
-    if (!player || player.role !== "player") {
+    if (!player || player.username === "gm") {
       return NextResponse.json({ error: "Hráč nenalezen." }, { status: 404 });
     }
 

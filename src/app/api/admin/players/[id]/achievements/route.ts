@@ -14,7 +14,7 @@ export async function POST(
     const achievementId = typeof body.achievementId === "string" ? body.achievementId : "";
 
     const player = await prisma.user.findUnique({ where: { id: playerId } });
-    if (!player || player.role !== "player") {
+    if (!player || player.username === "gm") {
       return NextResponse.json({ error: "Hráč nenalezen." }, { status: 404 });
     }
     const achievement = await prisma.achievement.findUnique({ where: { id: achievementId } });
