@@ -58,11 +58,12 @@ export function AppShell({ title, activeTab, maxWidth = 480, children }: AppShel
             minHeight: 0,
             overflowY: "auto",
             background: "var(--surface-app-bg-gradient)",
+            paddingBottom: "calc(64px + env(safe-area-inset-bottom))",
           }}
         >
           {children}
         </div>
-        <TabBar items={tabItems} active={activeTab} onChange={handleTabChange} />
+        <TabBar items={tabItems} active={activeTab} onChange={handleTabChange} maxWidth={maxWidth} />
       </div>
     </div>
   );

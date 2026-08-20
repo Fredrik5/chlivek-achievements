@@ -10,9 +10,10 @@ interface TabBarProps {
   items: TabItem[];
   active: string;
   onChange: (key: string) => void;
+  maxWidth?: number;
 }
 
-export function TabBar({ items, active, onChange }: TabBarProps) {
+export function TabBar({ items, active, onChange, maxWidth }: TabBarProps) {
   return (
     <div
       style={{
@@ -22,6 +23,14 @@ export function TabBar({ items, active, onChange }: TabBarProps) {
         background: "var(--c-brown-900)",
         borderTop: "1px solid var(--border-default)",
         boxShadow: "0 -6px 20px rgba(0,0,0,0.5)",
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        maxWidth,
+        margin: "0 auto",
+        zIndex: 50,
+        paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
       {items.map((item) => {
