@@ -12,6 +12,13 @@
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+/blob-report/
+/prisma/test.db
+/prisma/test.db-journal
+/prisma/test.db-wal
+/prisma/test.db-shm
 
 # next.js
 /.next/
